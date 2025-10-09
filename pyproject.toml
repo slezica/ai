@@ -1,0 +1,13 @@
+[project]
+name = "ai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "kagiapi>=0.2.1",
+    "lmstudio>=1.5.0",
+]
+
+[project.scripts]
+ai = "main:main"
