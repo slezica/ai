@@ -44,6 +44,9 @@ def main():
 # --------------------------------------------------------------------------------------------------
 # Helpers
 
+ROOT = os.getcwd()
+
+
 def tooldef(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -58,10 +61,8 @@ def tooldef(func):
 
 def is_inside(path, root):
   try:
-      r_root = Path(root).resolve()
-
-      Path(path).absolute().relative_to(r_root)
-      Path(path).resolve().relative_to(r_root)
+      Path(path).absolute().relative_to(Path(root).absolute())
+      Path(path).resolve().relative_to(Path(root).resolve())
 
       return True
 
@@ -96,6 +97,9 @@ def fs_stat(path: str) -> str:
     Returns a list of attributes including size, created time, modified time, accessed time,
     type ('f', 'd' or 'l') and permissions.
     """
+    if not is_inside(path, ROOT):
+        return f"Error: Access denied - path outside working directory ({ROOT})"
+
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
 
@@ -129,6 +133,9 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     Both arguments can be negative to count from the end, where -1 is the last line.
     Returns the lines as read.
     """
+    if not is_inside(path, ROOT):
+        return f"Error: Access denied - path outside working directory ({ROOT})"
+
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
     if not p.is_file(): return f"Error: Path is not a file: {path}"
@@ -152,6 +159,9 @@ def fs_list(path: str = ".") -> str:
     List files and directories in the given directory path.
     Returns a table with columns: size, type ('f', 'd' or 'l'), and name.
     """
+    if not is_inside(path, ROOT):
+        return f"Error: Access denied - path outside working directory ({ROOT})"
+
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
     if not p.is_dir(): return f"Error: Path is not a directory: {path}"
@@ -187,6 +197,9 @@ def fs_search(path: str, pattern: str) -> str:
     Search files for a regex pattern in the provided path.
     Returns matching lines in <file>:<line>:<content> format.
     """
+    if not is_inside(path, ROOT):
+        return f"Error: Access denied - path outside working directory ({ROOT})"
+
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
 
