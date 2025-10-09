@@ -85,20 +85,26 @@ def ffmpeg(args: str):
 def fs_stat(path: str) -> str:
     """
     Get information about a file or directory.
-    Includes size, created time, modified time, accessed time, isDirectory, isFile and permissions.
+    Includes size, created time, modified time, accessed time, type ('f', 'd' or 'l') and permissions.
     """
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
 
     stats = p.stat()
 
+    file_type = (
+        'l' if p.is_symlink() else
+        'd' if p.is_dir() else
+        'f' if p.is_file() else
+        '?'
+    )
+
     lines = [
         f"size: {stats.st_size}",
         f"created: {getattr(stats, 'st_birthtime', None)}",
         f"modified: {stats.st_mtime}",
         f"accessed: {stats.st_atime}",
-        f"isDirectory: {stat_module.S_ISDIR(stats.st_mode)}",
-        f"isFile: {stat_module.S_ISREG(stats.st_mode)}",
+        f"type: {file_type}",
         f"permissions: {oct(stats.st_mode)[-3:]}",
     ]
 
@@ -132,7 +138,10 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
 
 @tooldef
 def fs_list(path: str = ".") -> str:
-    """List files and directories in the given directory path."""
+    """
+    List files and directories in the given directory path.
+    Returns a table with columns: size, type ('f', 'd' or 'l'), and name.
+    """
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
     if not p.is_dir(): return f"Error: Path is not a directory: {path}"
@@ -143,9 +152,9 @@ def fs_list(path: str = ".") -> str:
         size = stats.st_size
 
         file_type = (
+            'l' if item.is_symlink() else
             'd' if item.is_dir() else
             'f' if item.is_file() else
-            'l' if item.is_symlink() else
             '?'
         )
 
