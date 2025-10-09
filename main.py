@@ -85,7 +85,8 @@ def ffmpeg(args: str):
 def fs_stat(path: str) -> str:
     """
     Get information about a file or directory.
-    Includes size, created time, modified time, accessed time, type ('f', 'd' or 'l') and permissions.
+    Returns a list of attributes including size, created time, modified time, accessed time,
+    type ('f', 'd' or 'l') and permissions.
     """
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
@@ -118,6 +119,7 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     If the optional `start` argument is provided, read from that line (inclusive).
     If the optional `end` argument is provided, read up to that line (inclusive).
     Both arguments can be negative to count from the end, where -1 is the last line.
+    Returns the lines as read.
     """
     p = Path(path)
     if not p.exists(): return f"Error: Path does not exist: {path}"
