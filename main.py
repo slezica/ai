@@ -74,17 +74,6 @@ def tooldef(func):
     return wrapper
 
 
-def is_inside(path, root):
-    try:
-        Path(path).absolute().relative_to(Path(root).absolute())
-        Path(path).resolve().relative_to(Path(root).resolve())
-  
-        return True
-  
-    except (ValueError, RuntimeError, OSError):
-        return False
-
-
 class ToolError(Exception):
     message = "" # override
 
@@ -294,6 +283,16 @@ def fs_search(path: str, pattern: str) -> str:
     else:
         return f"Error: {result.stderr}"
 
+
+def is_inside(path, root):
+    try:
+        Path(path).absolute().relative_to(Path(root).absolute())
+        Path(path).resolve().relative_to(Path(root).resolve())
+  
+        return True
+  
+    except (ValueError, RuntimeError, OSError):
+        return False
 
 # --------------------------------------------------------------------------------------------------
 # Kagi Search (adapted from kagimcp)
