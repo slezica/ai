@@ -13,7 +13,6 @@ import lmstudio as lms
 import kagiapi as kagi
 
 
-
 def main():
     parser = argparse.ArgumentParser(description='Chat with LM Studio models')
     parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
@@ -56,6 +55,7 @@ def tooldef(func):
 
     return wrapper
 
+
 def is_inside(path, root):
   try:
       r_root = Path(root).resolve()
@@ -84,8 +84,6 @@ def ffmpeg(args: str):
         return f"Error: {result.stderr}"
 
     return f"Success: {result.stdout}"
-
-
 
 
 # --------------------------------------------------------------------------------------------------
@@ -206,12 +204,11 @@ def fs_search(path: str, pattern: str) -> str:
         return f"Error: {result.stderr}"
 
 
-
-
 # --------------------------------------------------------------------------------------------------
 # Kagi Search (adapted from kagimcp)
 
 kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
+
 
 @tooldef
 def search(query: str) -> str:
