@@ -42,7 +42,7 @@ def main():
 # ffmpeg
 
 def ffmpeg(args: str):
-    """Run ffmpeg with the provided command-line arguments to inspect or manipulate video files."""
+    """Run ffmpeg with the provided command-line args to inspect or manipulate video files."""
     try:
         result = subprocess.run(
             ["ffmpeg"] + shlex.split(args),
