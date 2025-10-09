@@ -91,6 +91,37 @@ def stat(path: str) -> str:
         return f"Error: {str(e) or repr(e)}"
 
 
+def read(path: str, start: int = 0, end: int = -1) -> str:
+    """
+    Read lines from a file.
+    If the optional `start` argument is provided, read from that line (inclusive).
+    If the optional `end` argument is provided, read up to that line (inclusive).
+    Both arguments can be negative to count from the end, where -1 is the last line.
+    """
+    try:
+        p = Path(path)
+        if not p.exists():
+            return f"Error: Path does not exist: {path}"
+
+        if not p.is_file():
+            return f"Error: Path is not a file: {path}"
+
+        with open(p, 'r') as f:
+            lines = f.readlines()
+
+        if end == -1:
+            sliced = lines[start:]
+        elif end < -1:
+            sliced = lines[start:len(lines) + 1 + end]
+        else:
+            sliced = lines[start:end + 1]
+
+        return "".join(sliced)
+
+    except Exception as e:
+        return f"Error: {str(e) or repr(e)}"
+
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -198,6 +229,7 @@ def act(model, prompt, config):
             fetch_summary,
             ffmpeg,
             stat,
+            read,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
