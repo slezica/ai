@@ -15,7 +15,7 @@ def main():
     parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
     parser.add_argument('--draft', help="Draft model to use for speculative decoding")
-    parser.add_argument('--act', action='store_true', help="Use act API instead of respond_stream")
+    parser.add_argument('--act', action='store_true', help="Use act instead of respond")
     args = parser.parse_args()
 
     arg_prompt = args.prompt or ""
