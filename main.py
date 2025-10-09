@@ -1,4 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "kagiapi>=0.2.1",
+#     "lmstudio>=1.5.0",
+# ]
+# ///
+
+"""
+Command-line AI actor with essential tooling, backed by a local LMStudio.
+"""
+
+__version__ = '0.1.0'
+__author__ = "Santiago Lezica"
 
 import os
 import sys
@@ -17,7 +32,7 @@ WD = os.getcwd()
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Chat with LM Studio models')
+    parser = argparse.ArgumentParser(description="Chat with LM Studio models")
     parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
     parser.add_argument('--draft', help="Draft model to use for speculative decoding")
