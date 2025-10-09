@@ -8,8 +8,10 @@ import subprocess
 import shlex
 import stat as stat_module
 from pathlib import Path
+from functools import wraps
 import lmstudio as lms
 import kagiapi as kagi
+
 
 
 def main():
@@ -41,24 +43,37 @@ def main():
 
 
 # --------------------------------------------------------------------------------------------------
+# Helpers
+
+def toolfn(func):
+    """Decorator that wraps tool functions with error handling."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            error_msg = f"Error: {str(e) or repr(e)}"
+            print(error_msg, file=sys.stderr)
+            return error_msg
+    return wrapper
+
+
+# --------------------------------------------------------------------------------------------------
 # ffmpeg
 
+@toolfn
 def ffmpeg(args: str):
     """Run ffmpeg with the provided command-line args to inspect or manipulate video files."""
-    try:
-        result = subprocess.run(
-            ["ffmpeg"] + shlex.split(args),
-            capture_output=True,
-            text=True
-        )
+    result = subprocess.run(
+        ["ffmpeg"] + shlex.split(args),
+        capture_output=True,
+        text=True
+    )
 
-        if result.returncode != 0:
-            return f"Error: {result.stderr}"
+    if result.returncode != 0:
+        return f"Error: {result.stderr}"
 
-        return f"Success: {result.stdout}"
-
-    except Exception as exc:
-        return f"Error: {exc!r}"
+    return f"Success: {result.stdout}"
 
 
 
@@ -66,31 +81,29 @@ def ffmpeg(args: str):
 # --------------------------------------------------------------------------------------------------
 # File-system
 
+@toolfn
 def stat(path: str) -> str:
     """Get information about a file or directory."""
-    try:
-        p = Path(path)
-        if not p.exists():
-            return f"Error: Path does not exist: {path}"
+    p = Path(path)
+    if not p.exists():
+        return f"Error: Path does not exist: {path}"
 
-        stats = p.stat()
+    stats = p.stat()
 
-        lines = [
-            f"size: {stats.st_size}",
-            f"created: {getattr(stats, 'st_birthtime', None)}",
-            f"modified: {stats.st_mtime}",
-            f"accessed: {stats.st_atime}",
-            f"isDirectory: {stat_module.S_ISDIR(stats.st_mode)}",
-            f"isFile: {stat_module.S_ISREG(stats.st_mode)}",
-            f"permissions: {oct(stats.st_mode)[-3:]}",
-        ]
+    lines = [
+        f"size: {stats.st_size}",
+        f"created: {getattr(stats, 'st_birthtime', None)}",
+        f"modified: {stats.st_mtime}",
+        f"accessed: {stats.st_atime}",
+        f"isDirectory: {stat_module.S_ISDIR(stats.st_mode)}",
+        f"isFile: {stat_module.S_ISREG(stats.st_mode)}",
+        f"permissions: {oct(stats.st_mode)[-3:]}",
+    ]
 
-        return "\n".join(lines)
-
-    except Exception as e:
-        return f"Error: {str(e) or repr(e)}"
+    return "\n".join(lines)
 
 
+@toolfn
 def read(path: str, start: int = 0, end: int = -1) -> str:
     """
     Read lines from a file.
@@ -98,28 +111,24 @@ def read(path: str, start: int = 0, end: int = -1) -> str:
     If the optional `end` argument is provided, read up to that line (inclusive).
     Both arguments can be negative to count from the end, where -1 is the last line.
     """
-    try:
-        p = Path(path)
-        if not p.exists():
-            return f"Error: Path does not exist: {path}"
+    p = Path(path)
+    if not p.exists():
+        return f"Error: Path does not exist: {path}"
 
-        if not p.is_file():
-            return f"Error: Path is not a file: {path}"
+    if not p.is_file():
+        return f"Error: Path is not a file: {path}"
 
-        with open(p, 'r') as f:
-            lines = f.readlines()
+    with open(p, 'r') as f:
+        lines = f.readlines()
 
-        if end == -1:
-            sliced = lines[start:]
-        elif end < -1:
-            sliced = lines[start:len(lines) + 1 + end]
-        else:
-            sliced = lines[start:end + 1]
+    if end == -1:
+        sliced = lines[start:]
+    elif end < -1:
+        sliced = lines[start:len(lines) + 1 + end]
+    else:
+        sliced = lines[start:end + 1]
 
-        return "".join(sliced)
-
-    except Exception as e:
-        return f"Error: {str(e) or repr(e)}"
+    return "".join(sliced)
 
 
 
@@ -129,6 +138,7 @@ def read(path: str, start: int = 0, end: int = -1) -> str:
 
 kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
 
+@toolfn
 def search(query: str) -> str:
     """
         Fetch web results based on a query.
@@ -136,21 +146,18 @@ def search(query: str) -> str:
         They are numbered, so that a user may be able to refer to a result by a specific number.
     """
     print('> SEARCH', query)
-    try:
-        if not query:
-            return ""
 
-        result = kagi_client.search(query)
-        answer = format_results(query, result)
+    if not query:
+        return ""
 
-        print('< SEARCH', answer)
-        return answer
+    result = kagi_client.search(query)
+    answer = format_results(query, result)
 
-    except Exception as e:
-        print(e, file=sys.stderr)
-        return f"Error: {str(e) or repr(e)}"
+    print('< SEARCH', answer)
+    return answer
 
 
+@toolfn
 def fetch_summary(url: str) -> str:
     """
         Fetch summarized content from a URL.
@@ -158,23 +165,18 @@ def fetch_summary(url: str) -> str:
     """
     print('> FETCH_SUMMARY', url)
 
-    try:
-        if not url:
-            raise ValueError("Summarizer called with no URL.")
+    if not url:
+        raise ValueError("Summarizer called with no URL.")
 
-        answer = kagi_client.summarize(
-            url             = url,
-            engine          = "cecil",
-            summary_type    = "summary",
-            target_language = "EN",
-        )["data"]["output"]
+    answer = kagi_client.summarize(
+        url             = url,
+        engine          = "cecil",
+        summary_type    = "summary",
+        target_language = "EN",
+    )["data"]["output"]
 
-        print('< FETCH_SUMMARY', answer)
-        return answer
-
-    except Exception as e:
-        print(e, file=sys.stderr)
-        return f"Error: {str(e) or repr(e)}"
+    print('< FETCH_SUMMARY', answer)
+    return answer
 
 
 def format_results(query: str, response) -> str:
