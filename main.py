@@ -173,6 +173,29 @@ def fs_list(path: str = ".") -> str:
     return "\n".join(lines)
 
 
+@tooldef
+def fs_search(path: str, pattern: str) -> str:
+    """
+    Search files for a regex pattern in the provided path.
+    Returns matching lines in <file>:<line>:<content> format.
+    """
+    p = Path(path)
+    if not p.exists(): return f"Error: Path does not exist: {path}"
+
+    result = subprocess.run(
+        ["rg", "--line-number", "--color", "never", pattern, str(p)],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode == 0:
+        return result.stdout
+    elif result.returncode == 1:
+        return ""  # No matches found
+    else:
+        return f"Error: {result.stderr}"
+
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -275,6 +298,7 @@ def act(model, prompt, config):
             fs_stat,
             fs_read,
             fs_list,
+            fs_search,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
