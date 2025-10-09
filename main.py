@@ -46,7 +46,6 @@ def main():
 # Helpers
 
 def tooldef(func):
-    """Decorator that wraps tool functions with error handling."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -57,6 +56,17 @@ def tooldef(func):
 
     return wrapper
 
+def is_inside(path, root):
+  try:
+      r_root = Path(root).resolve()
+
+      Path(path).absolute().relative_to(r_root)
+      Path(path).resolve().relative_to(r_root)
+
+      return True
+
+  except (ValueError, RuntimeError, OSError):
+      return False
 
 # --------------------------------------------------------------------------------------------------
 # ffmpeg
