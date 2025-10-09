@@ -6,6 +6,8 @@ import argparse
 import textwrap
 import subprocess
 import shlex
+import stat as stat_module
+from pathlib import Path
 import lmstudio as lms
 import kagiapi as kagi
 
@@ -57,6 +59,36 @@ def ffmpeg(args: str):
 
     except Exception as exc:
         return f"Error: {exc!r}"
+
+
+
+
+# --------------------------------------------------------------------------------------------------
+# File-system
+
+def stat(path: str) -> str:
+    """Get information about a file or directory."""
+    try:
+        p = Path(path)
+        if not p.exists():
+            return f"Error: Path does not exist: {path}"
+
+        stats = p.stat()
+
+        lines = [
+            f"size: {stats.st_size}",
+            f"created: {getattr(stats, 'st_birthtime', None)}",
+            f"modified: {stats.st_mtime}",
+            f"accessed: {stats.st_atime}",
+            f"isDirectory: {stat_module.S_ISDIR(stats.st_mode)}",
+            f"isFile: {stat_module.S_ISREG(stats.st_mode)}",
+            f"permissions: {oct(stats.st_mode)[-3:]}",
+        ]
+
+        return "\n".join(lines)
+
+    except Exception as e:
+        return f"Error: {str(e) or repr(e)}"
 
 
 
@@ -165,6 +197,7 @@ def act(model, prompt, config):
             search,
             fetch_summary,
             ffmpeg,
+            stat,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
