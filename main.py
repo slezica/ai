@@ -110,13 +110,50 @@ class InvalidUrl(ToolError):
 class MissingOrEmpty(ToolError):
     message = "{name} cannot be missing or empty"
 
+class CommandDenied(ToolError):
+    message = "command '{command}' denied"
+
+class CommandForbidden(ToolError):
+    message = "command '{command}' is forbidden"
+
 
 # --------------------------------------------------------------------------------------------------
 # Shell
 
+shell_allowed = []
+shell_forbidden = []
+
+
 @tooldef
 def shell(command: str, arguments: list[str]):
     """Run a shell command with arguments, return the mixed stdout/stderr output."""
+
+    if command not in shell_allowed:
+        if command in shell_forbidden:
+            raise CommandForbidden(command=command)
+
+        # Ask for permission
+        print(f"\nAllow command '{command}'?", file=sys.stderr)
+        print("  [Y] Yes | [N] No | [A] Always | [X]Never", file=sys.stderr)
+
+        response = input("> ").strip().upper()
+
+        if response == 'A': # always
+            shell_allowed.append(command)
+
+        elif response == 'Y': # yes, this time
+            pass
+
+        elif response == 'N': # not, not this time
+            raise CommandDenied(command=command)
+
+        elif response == 'X': # never
+            shell_forbidden.append(command)
+            raise CommandDenied(command=command)
+
+        else: # no by default
+            raise CommandDenied(command=command)
+
     result = subprocess.run(
         [command] + arguments,
         stdout=subprocess.PIPE,
@@ -340,7 +377,7 @@ def respond(model, prompt, config):
     print()
 
 
-def act(model, prompt, config):
+def act(model: lms.LLM, prompt, config):
     chat = lms.Chat(prompt)
 
     model.act(
