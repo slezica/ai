@@ -161,6 +161,15 @@ def shell(command: str, arguments: list[str]):
 # File-system
 
 @tooldef
+def fs_pwd() -> str:
+    """
+    Get the current working directory.
+    Returns the absolute path of the current working directory.
+    """
+    return WD
+
+
+@tooldef
 def fs_stat(path: str) -> str:
     """
     Get information about a file or directory.
@@ -406,6 +415,7 @@ def act(model: lms.LLM, prompt, config):
             fs_write,
             fs_list,
             fs_search,
+            fs_pwd
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
