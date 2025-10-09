@@ -52,9 +52,9 @@ def tooldef(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            error_msg = f"Error: {str(e) or repr(e)}"
-            print(error_msg, file=sys.stderr)
-            return error_msg
+            print(e, file=sys.stderr)
+            return f"Error: {str(e) or repr(e)}"
+
     return wrapper
 
 
