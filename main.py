@@ -230,15 +230,12 @@ def search(query: str) -> str:
         Use for general search and when the user explicitly tells you to 'search' for results/information.
         They are numbered, so that a user may be able to refer to a result by a specific number.
     """
-    print('> SEARCH', query)
-
     if not query:
         return ""
 
     result = kagi_client.search(query)
     answer = format_results(query, result)
 
-    print('< SEARCH', answer)
     return answer
 
 
@@ -248,7 +245,6 @@ def fetch_summary(url: str) -> str:
         Fetch summarized content from a URL.
         Works with any document type (text webpage, video, audio, etc.)
     """
-    print('> FETCH_SUMMARY', url)
 
     if not url:
         raise ValueError("Summarizer called with no URL.")
@@ -260,7 +256,6 @@ def fetch_summary(url: str) -> str:
         target_language = "EN",
     )["data"]["output"]
 
-    print('< FETCH_SUMMARY', answer)
     return answer
 
 
