@@ -45,7 +45,7 @@ def main():
 # --------------------------------------------------------------------------------------------------
 # Helpers
 
-def toolfn(func):
+def tooldef(func):
     """Decorator that wraps tool functions with error handling."""
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -61,7 +61,7 @@ def toolfn(func):
 # --------------------------------------------------------------------------------------------------
 # ffmpeg
 
-@toolfn
+@tooldef
 def ffmpeg(args: str):
     """Run ffmpeg with the provided command-line args to inspect or manipulate video files."""
     result = subprocess.run(
@@ -81,8 +81,8 @@ def ffmpeg(args: str):
 # --------------------------------------------------------------------------------------------------
 # File-system
 
-@toolfn
-def stat(path: str) -> str:
+@tooldef
+def fs_stat(path: str) -> str:
     """Get information about a file or directory."""
     p = Path(path)
     if not p.exists():
@@ -103,8 +103,8 @@ def stat(path: str) -> str:
     return "\n".join(lines)
 
 
-@toolfn
-def read(path: str, start: int = 0, end: int = -1) -> str:
+@tooldef
+def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     """
     Read lines from a file.
     If the optional `start` argument is provided, read from that line (inclusive).
@@ -138,7 +138,7 @@ def read(path: str, start: int = 0, end: int = -1) -> str:
 
 kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
 
-@toolfn
+@tooldef
 def search(query: str) -> str:
     """
         Fetch web results based on a query.
@@ -157,7 +157,7 @@ def search(query: str) -> str:
     return answer
 
 
-@toolfn
+@tooldef
 def fetch_summary(url: str) -> str:
     """
         Fetch summarized content from a URL.
@@ -230,8 +230,8 @@ def act(model, prompt, config):
             search,
             fetch_summary,
             ffmpeg,
-            stat,
-            read,
+            fs_stat,
+            fs_read,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
