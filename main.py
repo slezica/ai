@@ -19,24 +19,32 @@ def respond(model, prompt, config):
     print()
 
 
-def create_file(name: str, content: str):
-    """Create a file with the given name and content."""
-    dest_path = Path(name)
-    if dest_path.exists():
-        return "Error: File already exists."
+def ffmpeg(args: str):
+    """Run ffmpeg with the provided command-line arguments to inspect or manipulate video files."""
+    import subprocess
+    import shlex
     try:
-        dest_path.write_text(content, encoding="utf-8")
+        result = subprocess.run(
+            ["ffmpeg"] + shlex.split(args),
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            return f"Error: {result.stderr}"
+
+        return f"Success: {result.stdout}"
+
     except Exception as exc:
-        return "Error: {exc!r}"
-    return "File created."
+        return f"Error: {exc!r}"
 
 
 def act(model, prompt, config):
-    chat = lms.Chat("You are a command-line AI agent that executes commands as requested by the user.")
+    chat = lms.Chat("You are a command-line AI agent that executes commands as requested by the user. Stand by for requests.")
 
     model.act(
         chat,
-        [create_file],
+        [ffmpeg],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
     )
