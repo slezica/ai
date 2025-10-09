@@ -83,10 +83,12 @@ def ffmpeg(args: str):
 
 @tooldef
 def fs_stat(path: str) -> str:
-    """Get information about a file or directory."""
+    """
+    Get information about a file or directory.
+    Includes size, created time, modified time, accessed time, isDirectory, isFile and permissions.
+    """
     p = Path(path)
-    if not p.exists():
-        return f"Error: Path does not exist: {path}"
+    if not p.exists(): return f"Error: Path does not exist: {path}"
 
     stats = p.stat()
 
@@ -112,11 +114,8 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     Both arguments can be negative to count from the end, where -1 is the last line.
     """
     p = Path(path)
-    if not p.exists():
-        return f"Error: Path does not exist: {path}"
-
-    if not p.is_file():
-        return f"Error: Path is not a file: {path}"
+    if not p.exists(): return f"Error: Path does not exist: {path}"
+    if not p.is_file(): return f"Error: Path is not a file: {path}"
 
     with open(p, 'r') as f:
         lines = f.readlines()
