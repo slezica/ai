@@ -1,28 +1,48 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import argparse
+import textwrap
+import subprocess
+import shlex
 import lmstudio as lms
-from pathlib import Path
+import kagiapi as kagi
 
 
-def respond(model, prompt, config):
-    prediction_stream = model.respond_stream(prompt, config=config)
+def main():
+    parser = argparse.ArgumentParser(description='Chat with LM Studio models')
+    parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
+    parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
+    parser.add_argument('--draft', help="Draft model to use for speculative decoding")
+    parser.add_argument('--act', action='store_true', help="Use act API instead of respond_stream")
+    args = parser.parse_args()
 
-    try:
-        for fragment in prediction_stream:
-            print(fragment.content, end="")
-    except Exception as e:
-        prediction_stream.cancel()
-        raise e
+    arg_prompt = args.prompt or ""
+    stdin_prompt = sys.stdin.read().strip() if not sys.stdin.isatty() else ''
 
-    print()
+    prompt = f"{arg_prompt}\n\n{stdin_prompt}".strip()
 
+    if not prompt:
+        sys.exit(1)
+
+    model = lms.llm(args.model)
+
+    config = {
+        'draftModel': args.draft or None
+    }
+
+    if args.act:
+        act(model, prompt, config)
+    else:
+        respond(model, prompt, config)
+
+
+# --------------------------------------------------------------------------------------------------
+# ffmpeg
 
 def ffmpeg(args: str):
     """Run ffmpeg with the provided command-line arguments to inspect or manipulate video files."""
-    import subprocess
-    import shlex
     try:
         result = subprocess.run(
             ["ffmpeg"] + shlex.split(args),
@@ -39,12 +59,113 @@ def ffmpeg(args: str):
         return f"Error: {exc!r}"
 
 
+
+
+# --------------------------------------------------------------------------------------------------
+# Kagi Search (adapted from kagimcp)
+
+kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
+
+def search(query: str) -> str:
+    """
+        Fetch web results based on a query.
+        Use for general search and when the user explicitly tells you to 'search' for results/information.
+        They are numbered, so that a user may be able to refer to a result by a specific number.
+    """
+    print('> SEARCH', query)
+    try:
+        if not query:
+            return ""
+
+        result = kagi_client.search(query)
+        answer = format_results(query, result)
+
+        print('< SEARCH', answer)
+        return answer
+
+    except Exception as e:
+        print(e, file=sys.stderr)
+        return f"Error: {str(e) or repr(e)}"
+
+
+def fetch_summary(url: str) -> str:
+    """
+        Fetch summarized content from a URL.
+        Works with any document type (text webpage, video, audio, etc.)
+    """
+    print('> FETCH_SUMMARY', url)
+
+    try:
+        if not url:
+            raise ValueError("Summarizer called with no URL.")
+
+        answer = kagi_client.summarize(
+            url             = url,
+            engine          = "cecil",
+            summary_type    = "summary",
+            target_language = "EN",
+        )["data"]["output"]
+
+        print('< FETCH_SUMMARY', answer)
+        return answer
+
+    except Exception as e:
+        print(e, file=sys.stderr)
+        return f"Error: {str(e) or repr(e)}"
+
+
+def format_results(query: str, response) -> str:
+    template = textwrap.dedent("""
+        {number}: {title}
+        {url}
+        Published Date: {published}
+        {snippet}
+    """).strip()
+
+    # t == 0 is search result, t == 1 is related searches
+    results = [result for result in response["data"] if result["t"] == 0]
+
+    # published date is not always present
+    results_formatted = [
+        template.format(
+            number    = number,
+            title     = result["title"],
+            url       = result["url"],
+            published = result.get("published", "Not Available"),
+            snippet   = result["snippet"],
+        )
+        for number, result in enumerate(results)
+    ]
+
+    return "\n\n".join(results_formatted)
+
+
+# --------------------------------------------------------------------------------------------------
+# LLM
+
+def respond(model, prompt, config):
+    prediction_stream = model.respond_stream(prompt, config=config)
+
+    try:
+        for fragment in prediction_stream:
+            print(fragment.content, end="")
+    except Exception as e:
+        prediction_stream.cancel()
+        raise e
+
+    print()
+
+
 def act(model, prompt, config):
-    chat = lms.Chat("You are a command-line AI agent that executes commands as requested by the user. Stand by for requests.")
+    chat = lms.Chat(prompt)
 
     model.act(
         chat,
-        [ffmpeg],
+        [
+            search,
+            fetch_summary,
+            ffmpeg,
+        ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
     )
@@ -52,36 +173,8 @@ def act(model, prompt, config):
     print()
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Chat with LM Studio models')
-    parser.add_argument('prompt', nargs='?', help='Prompt text')
-    parser.add_argument('--model', default='qwen/qwen3-30b-a3b-2507', help='Model to use (default: qwen/qwen3-30b-a3b-2507)')
-    parser.add_argument('--draft', help='Draft model to use for speculative decoding')
-    parser.add_argument('--act', action='store_true', help='Use act API instead of respond_stream')
-    args = parser.parse_args()
-
-    stdin_text = sys.stdin.read().strip() if not sys.stdin.isatty() else ''
-
-    prompt_parts = []
-    if args.prompt:
-        prompt_parts.append(args.prompt)
-    if stdin_text:
-        prompt_parts.append(stdin_text)
-
-    prompt = '\n'.join(prompt_parts)
-    if not prompt.strip():
-        sys.exit(1)
-
-    model = lms.llm(args.model)
-
-    config = {
-        'draftModel': args.draft or None
-    }
-
-    if args.act:
-        act(model, prompt, config)
-    else:
-        respond(model, prompt, config)
+# --------------------------------------------------------------------------------------------------
+# Go!
 
 if __name__ == "__main__":
     main()
