@@ -131,6 +131,38 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     return "".join(sliced)
 
 
+@tooldef
+def fs_list(path: str = ".") -> str:
+    """List files and directories in the given directory path."""
+    p = Path(path)
+    if not p.exists(): return f"Error: Path does not exist: {path}"
+    if not p.is_dir(): return f"Error: Path is not a directory: {path}"
+
+    entries = []
+    for item in sorted(p.iterdir(), key=lambda x: x.name):
+        stats = item.stat()
+        size = stats.st_size
+
+        file_type = (
+            'd' if item.is_dir() else
+            'f' if item.is_file() else
+            'l' if item.is_symlink() else
+            '?'
+        )
+
+        entries.append((size, file_type, item.name))
+
+    if not entries:
+        return ""
+
+    lines = [
+        f"{str(size).rjust(12)}  {file_type}  {name.ljust(50)}"
+        for size, file_type, name in entries
+    ]
+
+    return "\n".join(lines)
+
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -232,6 +264,7 @@ def act(model, prompt, config):
             ffmpeg,
             fs_stat,
             fs_read,
+            fs_list,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
