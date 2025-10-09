@@ -13,6 +13,9 @@ import lmstudio as lms
 import kagiapi as kagi
 
 
+WD = os.getcwd()
+
+
 def main():
     parser = argparse.ArgumentParser(description='Chat with LM Studio models')
     parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
@@ -44,9 +47,6 @@ def main():
 # --------------------------------------------------------------------------------------------------
 # Helpers
 
-ROOT = os.getcwd()
-
-
 def tooldef(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -60,14 +60,41 @@ def tooldef(func):
 
 
 def is_inside(path, root):
-  try:
-      Path(path).absolute().relative_to(Path(root).absolute())
-      Path(path).resolve().relative_to(Path(root).resolve())
+    try:
+        Path(path).absolute().relative_to(Path(root).absolute())
+        Path(path).resolve().relative_to(Path(root).resolve())
+  
+        return True
+  
+    except (ValueError, RuntimeError, OSError):
+        return False
 
-      return True
 
-  except (ValueError, RuntimeError, OSError):
-      return False
+class ToolError(Exception):
+    message = "" # override
+
+    def __init__(self, **kwargs):
+        self.details = kwargs
+        super().__init__("Error: " + self.message.format(**kwargs))
+
+class PathDoesNotExist(ToolError):
+    message = "path '{path}' does not exist"
+
+class PathIsNotDirectory(ToolError):
+    message = "path '{path}' is not a directory"
+
+class PathIsNotFile(ToolError):
+    message = "path '{path}' is not a file"
+
+class PathOutsideWorkDir(ToolError):
+    message = "path '{path}' is outside working directory '{wd}'"
+
+class InvalidUrl(ToolError):
+    message = "url {url} is not valid"
+
+class MissingOrEmpty(ToolError):
+    message = "{name} cannot be missing or empty"
+
 
 # --------------------------------------------------------------------------------------------------
 # ffmpeg
@@ -97,11 +124,10 @@ def fs_stat(path: str) -> str:
     Returns a list of attributes including size, created time, modified time, accessed time,
     type ('f', 'd' or 'l') and permissions.
     """
-    if not is_inside(path, ROOT):
-        return f"Error: Access denied - path outside working directory ({ROOT})"
 
     p = Path(path)
-    if not p.exists(): return f"Error: Path does not exist: {path}"
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if not p.exists(): raise PathDoesNotExist(path=path)
 
     stats = p.stat()
 
@@ -133,12 +159,11 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     Both arguments can be negative to count from the end, where -1 is the last line.
     Returns the lines as read.
     """
-    if not is_inside(path, ROOT):
-        return f"Error: Access denied - path outside working directory ({ROOT})"
 
     p = Path(path)
-    if not p.exists(): return f"Error: Path does not exist: {path}"
-    if not p.is_file(): return f"Error: Path is not a file: {path}"
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if not p.exists(): raise PathDoesNotExist(path=path)
+    if not p.is_file(): raise PathIsNotFile(path=path)
 
     with open(p, 'r') as f:
         lines = f.readlines()
@@ -159,12 +184,11 @@ def fs_list(path: str = ".") -> str:
     List files and directories in the given directory path.
     Returns a table with columns: size, type ('f', 'd' or 'l'), and name.
     """
-    if not is_inside(path, ROOT):
-        return f"Error: Access denied - path outside working directory ({ROOT})"
 
     p = Path(path)
-    if not p.exists(): return f"Error: Path does not exist: {path}"
-    if not p.is_dir(): return f"Error: Path is not a directory: {path}"
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if not p.exists(): raise PathDoesNotExist(path=path)
+    if not p.is_dir(): raise PathIsNotDirectory(path=path)
 
     entries = []
     for item in sorted(p.iterdir(), key=lambda x: x.name):
@@ -197,11 +221,10 @@ def fs_search(path: str, pattern: str) -> str:
     Search files for a regex pattern in the provided path.
     Returns matching lines in <file>:<line>:<content> format.
     """
-    if not is_inside(path, ROOT):
-        return f"Error: Access denied - path outside working directory ({ROOT})"
 
     p = Path(path)
-    if not p.exists(): return f"Error: Path does not exist: {path}"
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if not p.exists(): raise PathDoesNotExist(path=path)
 
     result = subprocess.run(
         ["rg", "--line-number", "--color", "never", pattern, str(p)],
@@ -224,14 +247,14 @@ kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
 
 
 @tooldef
-def search(query: str) -> str:
+def web_search(query: str) -> str:
     """
         Fetch web results based on a query.
         Use for general search and when the user explicitly tells you to 'search' for results/information.
         They are numbered, so that a user may be able to refer to a result by a specific number.
     """
-    if not query:
-        return ""
+
+    if not query: raise MissingOrEmpty(name="query")
 
     result = kagi_client.search(query)
     answer = format_results(query, result)
@@ -240,14 +263,12 @@ def search(query: str) -> str:
 
 
 @tooldef
-def fetch_summary(url: str) -> str:
+def web_fetch_summary(url: str) -> str:
     """
-        Fetch summarized content from a URL.
+        Fetch web summarized content from a URL.
         Works with any document type (text webpage, video, audio, etc.)
     """
-
-    if not url:
-        raise ValueError("Summarizer called with no URL.")
+    if not url: raise InvalidUrl(url=url)
 
     answer = kagi_client.summarize(
         url             = url,
@@ -307,8 +328,8 @@ def act(model, prompt, config):
     model.act(
         chat,
         [
-            search,
-            fetch_summary,
+            web_search,
+            web_fetch_summary,
             ffmpeg,
             fs_stat,
             fs_read,
