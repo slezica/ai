@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env python3
 
 # /// script
 # requires-python = ">=3.10"
@@ -7,7 +7,6 @@
 #     "lmstudio>=1.5.0",
 # ]
 # ///
-
 """
 Command-line AI actor with essential tooling, backed by a local LMStudio.
 """
@@ -223,6 +222,23 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
 
 
 @tooldef
+def fs_write(path: str, content: str, mode: str = 'w') -> str:
+    """
+    Write content to a file using the specified mode.
+    Mode can be 'w' (write/overwrite), 'w+' (write/read), 'a' (append), 'a+' (append/read), etc.
+    Returns a success message or error.
+    """
+
+    p = Path(path)
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+
+    with open(p, mode) as f:
+        f.write(content)
+
+    return f"Successfully wrote {len(content)} characters to {path} (mode: {mode})"
+
+
+@tooldef
 def fs_list(path: str = ".") -> str:
     """
     List files and directories in the given directory path.
@@ -387,6 +403,7 @@ def act(model: lms.LLM, prompt, config):
             # shell,
             fs_stat,
             fs_read,
+            fs_write,
             fs_list,
             fs_search,
         ],
