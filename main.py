@@ -112,21 +112,24 @@ class MissingOrEmpty(ToolError):
 
 
 # --------------------------------------------------------------------------------------------------
-# ffmpeg
+# Shell
 
 @tooldef
-def ffmpeg(args: str):
-    """Run ffmpeg with the provided command-line args to inspect or manipulate video files."""
+def shell(command: str, arguments: list[str]):
+    """Run a shell command with arguments, return the mixed stdout/stderr output."""
     result = subprocess.run(
-        ["ffmpeg"] + shlex.split(args),
-        capture_output=True,
+        [command] + arguments,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True
     )
 
-    if result.returncode != 0:
-        return f"Error: {result.stderr}"
+    output = result.stdout if result.stdout.strip() else "(no output)"
 
-    return f"Success: {result.stdout}"
+    if result.returncode != 0:
+        return f"Error (exit code {result.returncode}):\n{output}"
+
+    return f"Success (exit code 0):\n{output}"
 
 
 # --------------------------------------------------------------------------------------------------
@@ -345,7 +348,7 @@ def act(model, prompt, config):
         [
             web_search,
             web_fetch_summary,
-            ffmpeg,
+            # shell,
             fs_stat,
             fs_read,
             fs_list,
