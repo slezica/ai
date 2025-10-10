@@ -89,16 +89,16 @@ def act(model: lms.LLM, prompt, config):
     model.act(
         chat,
         [
-            # web_search,
-            # web_fetch_summary,
-            # shell,
+            web_search,
+            web_fetch_summary,
             fs_stat,
             fs_read,
             fs_write,
             fs_list,
             fs_search,
             fs_replace,
-            fs_pwd
+            fs_pwd,
+            shell,
         ],
         on_prediction_fragment = lambda f, index: print(f.content, end=""),
         on_message = chat.append
