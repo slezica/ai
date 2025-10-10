@@ -68,6 +68,46 @@ def main():
 
 
 # --------------------------------------------------------------------------------------------------
+# LLM
+
+def respond(model, prompt, config):
+    prediction_stream = model.respond_stream(prompt, config=config)
+
+    try:
+        for fragment in prediction_stream:
+            print(fragment.content, end="")
+    except Exception as e:
+        prediction_stream.cancel()
+        raise e
+
+    print()
+
+
+def act(model: lms.LLM, prompt, config):
+    chat = lms.Chat(prompt)
+
+    model.act(
+        chat,
+        [
+            # web_search,
+            # web_fetch_summary,
+            # shell,
+            fs_stat,
+            fs_read,
+            fs_write,
+            fs_list,
+            fs_search,
+            fs_replace,
+            fs_pwd
+        ],
+        on_prediction_fragment = lambda f, index: print(f.content, end=""),
+        on_message = chat.append
+    )
+
+    print()
+
+
+# --------------------------------------------------------------------------------------------------
 # Helpers
 
 def tooldef(func):
@@ -483,46 +523,6 @@ def format_results(query: str, response) -> str:
     ]
 
     return "\n\n".join(results_formatted)
-
-
-# --------------------------------------------------------------------------------------------------
-# LLM
-
-def respond(model, prompt, config):
-    prediction_stream = model.respond_stream(prompt, config=config)
-
-    try:
-        for fragment in prediction_stream:
-            print(fragment.content, end="")
-    except Exception as e:
-        prediction_stream.cancel()
-        raise e
-
-    print()
-
-
-def act(model: lms.LLM, prompt, config):
-    chat = lms.Chat(prompt)
-
-    model.act(
-        chat,
-        [
-            # web_search,
-            # web_fetch_summary,
-            # shell,
-            fs_stat,
-            fs_read,
-            fs_write,
-            fs_list,
-            fs_search,
-            fs_replace,
-            fs_pwd
-        ],
-        on_prediction_fragment = lambda f, index: print(f.content, end=""),
-        on_message = chat.append
-    )
-
-    print()
 
 
 # --------------------------------------------------------------------------------------------------
