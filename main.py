@@ -16,6 +16,7 @@ __author__ = "Santiago Lezica"
 
 import os
 import sys
+import traceback
 import argparse
 import textwrap
 import subprocess
@@ -73,9 +74,10 @@ def tooldef(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
+            print('!', func.__name__, kwargs)
             return func(*args, **kwargs)
         except Exception as e:
-            print(e, file=sys.stderr)
+            traceback.print_exc()
             return f"Error: {str(e) or repr(e)}"
 
     return wrapper
