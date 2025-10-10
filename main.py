@@ -32,16 +32,17 @@ WD = os.getcwd()
 
 def main():
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
-    parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
-    parser.add_argument('--draft', help="Draft model to use for speculative decoding")
-
     subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
 
     act_parser = subparsers.add_parser('act', help="Act using tools")
     act_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
+    act_parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
+    act_parser.add_argument('--draft', help="Draft model to use for speculative decoding")
 
     ask_parser = subparsers.add_parser('ask', help="Respond without using tools")
     ask_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
+    ask_parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
+    ask_parser.add_argument('--draft', help="Draft model to use for speculative decoding")
 
     args = parser.parse_args()
 
