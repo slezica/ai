@@ -104,6 +104,8 @@ class CommandDenied(ToolError):
 class CommandForbidden(ToolError):
     message = "command '{command}' is forbidden"
 
+class FailedReplace(Exception):
+    pass
 
 # --------------------------------------------------------------------------------------------------
 # Shell
@@ -307,6 +309,51 @@ def fs_search(path: str, pattern: str) -> str:
         return ""  # No matches found
     else:
         return f"Error: {result.stderr}"
+
+
+@tooldef
+def fs_replace(path: str, old_string: str, new_string: str, replace_all: bool = False) -> None:
+    """
+    Replace occurences of a string in a file for a new string. Good for precise edits.
+
+    Arguments:
+        path       : the path to the file.
+        old_string : the string to find and replace
+        new_string : the replacement string
+        replace_all: a boolean indicating whether to replace all occurences (true) or just the first (false)
+
+    Returns nothing if successful, an error if not.
+    """
+    try:
+        with open(path) as f:
+            content = f.read()
+    except Exception as e:
+        raise FailedReplace(f"Error reading file: {str(e)}")
+
+    if len(old_string) == 0:
+        raise FailedReplace("old_string must be a non-empty string")
+
+    if len(new_string) == 0:
+        raise FailedReplace("new_string must be a non-empty string")
+
+    if old_string == new_string:
+        raise FailedReplace("new_string must be different from old_string")
+
+    count = content.count(old_string)
+
+    if count == 0:
+        raise FailedReplace("old_string not found in content")
+
+    if replace_all:
+        updated_content = content.replace(old_string, new_string)
+    else:
+        updated_content = content.replace(old_string, new_string, 1)
+
+    try:
+        with open(path, 'w') as f:
+            f.write(updated_content)
+    except Exception as e:
+        raise FailedReplace(f"Error writing file: {str(e)}")
 
 
 def is_inside(path, root):
