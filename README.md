@@ -19,41 +19,47 @@ Take `main.py` with you, put it in your `PATH` under a name you like. I use `ai`
 
 _Assuming `main.py` is in your `PATH` named `ai`_.
 
-Prompt the default model:
+Act using tools:
 ```bash
-ai "is this working?"
+ai act "is this working?"
 ```
 
-Prompt the default model with additional piped data:
+Act with additional piped data:
 ```bash
-seq 10 | ai "how many numbers in the following sequence?"
+seq 10 | ai act "how many numbers in the following sequence?"
 ```
 
-Prompt a custom model:
+Act with a custom model:
 ```bash
-ai --model "meta/llama-3-8b" "you are my favorite model, just so you know"
+ai act --model "openai/gpt-oss-20b" "you are my favorite model"
 ```
 
-Use speculative decoding:
+Act with speculative decoding:
 ```bash
-ai --model "large-model" --draft "small-model" "be nice to your smaller model"
+ai act --model "large-model" --draft "small-model" "be nice to your smaller model"
 ```
 
-Disable action and tooling, just respond:
-
+Respond without using tools:
 ```bash
-ai --talk "what is the meaning of life?"
+ai ask "what is the meaning of life?"
+```
+
+Ask with a custom model:
+```bash
+ai ask --model "openai/gpt-oss-20b" "explain quantum computing"
 ```
 
 
 ## Tools Available
 
-Unless `--talk` is given, the agent has the following tools:
+When using the `act` subcommand, the agent has the following tools:
 
-- **fs_list**: list directory contents with name, size and type
+- **fs_pwd**: get the current working directory
 - **fs_stat**: get file/directory metadata (size, times, type, permissions)
+- **fs_list**: list directory contents with size, type and name
 - **fs_read**: read file contents with optional line ranges
-- **fs_search** - search files by regex pattern using ripgrep
-- **search** - web search via Kagi API
-- **fetch_summary** - web page summary via Kagi API
-- **ffmpeg** - permission to run ffmpeg commands for video inspection/manipulation
+- **fs_write**: write content to a file using specified mode (w, a, etc.)
+- **fs_search**: search files by regex pattern using ripgrep
+- **fs_replace**: replace occurrences of a string in a file (precise edits)
+
+Note: web search and shell execution tools are currently disabled in the code.
