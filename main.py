@@ -298,7 +298,11 @@ def fs_list(path: str = ".") -> str:
 
     entries = []
     for item in sorted(p.iterdir(), key=lambda x: x.name):
-        stats = item.stat()
+        try:
+            stats = item.stat()
+        except:
+            continue # could be a broken symlink or a restricted file, for example
+
         size = stats.st_size
 
         file_type = (
