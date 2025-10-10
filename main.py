@@ -116,7 +116,15 @@ shell_forbidden = []
 
 @tooldef
 def shell(command: str, arguments: list[str]):
-    """Run a shell command with arguments, return the mixed stdout/stderr output."""
+    """
+    Run a shell command with arguments.
+
+    Arguments:
+        command  : the command to execute
+        arguments: list of arguments to pass to the command
+
+    Returns the mixed stdout/stderr output.
+    """
 
     if command not in shell_allowed:
         if command in shell_forbidden:
@@ -166,6 +174,7 @@ def shell(command: str, arguments: list[str]):
 def fs_pwd() -> str:
     """
     Get the current working directory.
+
     Returns the absolute path of the current working directory.
     """
     return WD
@@ -175,8 +184,11 @@ def fs_pwd() -> str:
 def fs_stat(path: str) -> str:
     """
     Get information about a file or directory.
-    Returns a list of attributes including size, created time, modified time, accessed time,
-    type ('f', 'd' or 'l') and permissions.
+
+    Arguments:
+        path: the path to the file or directory
+
+    Returns attributes including size, created time, modified time, accessed time, type ('f', 'd' or 'l') and permissions.
     """
 
     p = Path(path)
@@ -208,9 +220,13 @@ def fs_stat(path: str) -> str:
 def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     """
     Read lines from a file.
-    If the optional `start` argument is provided, read from that line (inclusive).
-    If the optional `end` argument is provided, read up to that line (inclusive).
-    Both arguments can be negative to count from the end, where -1 is the last line.
+
+    Arguments:
+        path : the path to the file
+        start: the line number to start from (inclusive), defaults to 0
+        end  : the line number to end at (inclusive), defaults to -1 (last line)
+
+    Both start and end can be negative to count from the end, where -1 is the last line.
     Returns the lines as read.
     """
 
@@ -236,8 +252,13 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
 def fs_write(path: str, content: str, mode: str = 'w') -> str:
     """
     Write content to a file using the specified mode.
-    Mode can be 'w' (write/overwrite), 'w+' (write/read), 'a' (append), 'a+' (append/read), etc.
-    Returns a success message or error.
+
+    Arguments:
+        path   : the path to the file
+        content: the content to write
+        mode   : file mode - 'w' (write/overwrite), 'w+' (write/read), 'a' (append), 'a+' (append/read), etc.
+
+    Returns a success message.
     """
 
     p = Path(path)
@@ -253,6 +274,10 @@ def fs_write(path: str, content: str, mode: str = 'w') -> str:
 def fs_list(path: str = ".") -> str:
     """
     List files and directories in the given directory path.
+
+    Arguments:
+        path: the directory path to list, defaults to current directory
+
     Returns a table with columns: size, type ('f', 'd' or 'l'), and name.
     """
 
@@ -290,6 +315,11 @@ def fs_list(path: str = ".") -> str:
 def fs_search(path: str, pattern: str) -> str:
     """
     Search files for a regex pattern in the provided path.
+
+    Arguments:
+        path   : the path to search in
+        pattern: the regex pattern to search for
+
     Returns matching lines in <file>:<line>:<content> format.
     """
 
@@ -375,9 +405,13 @@ kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
 @tooldef
 def web_search(query: str) -> str:
     """
-        Fetch web results based on a query.
-        Use for general search and when the user explicitly tells you to 'search' for results/information.
-        They are numbered, so that a user may be able to refer to a result by a specific number.
+    Fetch web results based on a query.
+
+    Arguments:
+        query: the search query
+
+    Use for general search and when the user explicitly tells you to 'search' for results/information.
+    Returns numbered results that can be referred to by number.
     """
 
     if not query: raise MissingOrEmpty(name="query")
@@ -391,8 +425,13 @@ def web_search(query: str) -> str:
 @tooldef
 def web_fetch_summary(url: str) -> str:
     """
-        Fetch web summarized content from a URL.
-        Works with any document type (text webpage, video, audio, etc.)
+    Fetch web summarized content from a URL.
+
+    Arguments:
+        url: the URL to fetch and summarize
+
+    Works with any document type (text webpage, video, audio, etc.)
+    Returns a summary of the content.
     """
     if not url: raise InvalidUrl(url=url)
 
