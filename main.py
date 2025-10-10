@@ -32,10 +32,17 @@ WD = os.getcwd()
 
 def main():
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
-    parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
     parser.add_argument('--draft', help="Draft model to use for speculative decoding")
-    parser.add_argument('--talk', action='store_true', help="Respond without using tools")
+
+    subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
+
+    act_parser = subparsers.add_parser('act', help="Act using tools")
+    act_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
+
+    ask_parser = subparsers.add_parser('ask', help="Respond without using tools")
+    ask_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
+
     args = parser.parse_args()
 
     arg_prompt = args.prompt or ""
@@ -52,7 +59,7 @@ def main():
         'draftModel': args.draft or None
     }
 
-    if args.talk:
+    if args.command == 'ask':
         respond(model, prompt, config)
     else:
         act(model, prompt, config)
