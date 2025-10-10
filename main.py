@@ -37,13 +37,11 @@ def main():
 
     act_parser = subparsers.add_parser('act', help="Act using tools")
     act_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
-    act_parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
-    act_parser.add_argument('--draft', help="Draft model to use for speculative decoding")
+    act_parser.add_argument('--model', default='qwen/qwen3-30b-a3b-2507', help="Custom model to use")
 
     ask_parser = subparsers.add_parser('ask', help="Respond without using tools")
     ask_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     ask_parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
-    ask_parser.add_argument('--draft', help="Draft model to use for speculative decoding")
 
     args = parser.parse_args()
 
