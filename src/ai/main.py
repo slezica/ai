@@ -645,20 +645,14 @@ SANDBOX_PROFILE = '''
 '''
 
 def sandbox_exec():
-    """Re-execute this process with sandbox-exec."""
-    # Pass through all args but add --no-sandbox to prevent re-exec loop
-    args = sys.argv[1:]
+    # Pass through all args and add --no-sandbox at the end:
+    args = sys.argv[1:] + ['--no-sandbox']
 
-    if args and args[0] in ('act', 'ask'):
-        args.insert(1, '--no-sandbox')
-    else:
-        args.insert(0, '--no-sandbox')
-
-    # Get CWD and HOME for sandbox profile
+    # Get CWD and HOME for sandbox profile:
     cwd = os.getcwd()
     home = os.path.expanduser('~')
 
-    # Build sandbox-exec command
+    # Build sandbox-exec command:
     cmd = [
         'sandbox-exec',
         '-D', f'CWD={cwd}',
@@ -667,7 +661,7 @@ def sandbox_exec():
         sys.executable, '-m', 'ai.main'
     ] + args
 
-    # Replace current process
+    # Replace current process:
     os.execvp('sandbox-exec', cmd)
 
 
