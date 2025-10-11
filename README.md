@@ -1,6 +1,6 @@
 # `ai`
 
-Command-line AI actor with essential tooling, backed by a local LMStudio.
+Command-line AI actor with essential tooling, sandboxed, backed by a local LMStudio.
 
 
 ## Installation
@@ -54,6 +54,16 @@ ai ask "what is the meaning of life?"
 Ask with a custom model:
 ```bash
 ai ask --model "openai/gpt-oss-20b" "explain quantum computing"
+```
+
+### Sandbox
+
+The script sandboxes itself using `sandbox-exec`, and has various restrictions. Most importantly, it can't write outside the current working directory.
+
+You can disable this behavior with `--no-sandbox`.
+
+```bash
+ai act --no-sandbox "create a file in ../outside.txt"
 ```
 
 
