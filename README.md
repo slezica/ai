@@ -8,7 +8,7 @@ Command-line AI actor with essential tooling, backed by a local LMStudio.
 Clone this repository and either run with `uv`, or place a wrapper that calls `uv` in your `PATH`:
 
 ```bash
-git clone git@github.com:slezica/ai-cli.git ai-cli
+git clone git@github.com:slezica/ai-cli.git
 ```
 
 Command (or wrapper script):
