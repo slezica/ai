@@ -46,7 +46,7 @@ Act with a custom model:
 ai act --model "openai/gpt-oss-20b" "you are my favorite model"
 ```
 
-Respond without using tools:
+Ask without using tools:
 ```bash
 ai ask "what is the meaning of life?"
 ```
