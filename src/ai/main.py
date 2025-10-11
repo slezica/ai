@@ -3,6 +3,7 @@
 Command-line AI actor with essential tooling, backed by a local LMStudio.
 """
 
+from io import UnsupportedOperation
 import os
 import sys
 import traceback
@@ -13,8 +14,12 @@ import shlex
 import stat as stat_module
 from pathlib import Path
 from functools import wraps
+
 import lmstudio as lms
 import kagiapi as kagi
+import readabilipy
+import markdownify
+import requests
 
 
 WD = os.getcwd()
@@ -80,6 +85,7 @@ def act(model: lms.LLM, prompt, config):
         chat,
         [
             web_search,
+            web_fetch,
             web_fetch_summary,
             fs_stat,
             fs_read,
@@ -151,6 +157,16 @@ class FailedReplace(Exception):
 
 class PathAlreadyExists(ToolError):
     message = "path '{path}' already exists"
+
+class UnsupportedMimeType(ToolError):
+    message = "fetched mime type '{type}' is not supported"
+
+class ResponseTooLong(ToolError):
+    message = "fetched text was over the limit of {max} characters"
+
+class RequestFailed(ToolError):
+    message = "HTTP request failed: {error}"
+
 
 # --------------------------------------------------------------------------------------------------
 # Shell
@@ -508,6 +524,9 @@ def is_inside(path, root):
 
 kagi_client = kagi.KagiClient(os.getenv('KAGI_API_KEY'))
 
+web_fetch_types = ['text/plain', 'text/html', 'application/json', 'application/xml', 'text/xml']
+web_fetch_max_size = 10_000_000
+web_fetch_max_text_length = 100_000
 
 @tooldef
 def web_search(query: str) -> str:
@@ -527,6 +546,48 @@ def web_search(query: str) -> str:
     answer = format_results(query, result)
 
     return answer
+
+
+@tooldef
+def web_fetch(url: str) -> str:
+    """
+    Fetch web content from a URL.
+
+    Arguments:
+        url: the URL to fetch
+
+    Returns a plain-text representation of the content, if possible.
+    """
+    try:
+       with requests.get(url, stream=True) as r:
+            content_type = r.headers.get('content-type', '').split(';')[0].strip()
+
+            if content_type not in web_fetch_types:
+                raise UnsupportedMimeType(type=content_type)
+
+            total = 0
+            data = bytearray()
+
+            for chunk in r.iter_content(chunk_size=8192):
+                total += len(chunk)
+                if total > web_fetch_max_size:
+                    raise ResponseTooLong(max=web_fetch_max_text_length)
+
+                data.extend(chunk)
+
+            text = data.decode(r.encoding or 'utf-8', errors="replace")
+
+            if content_type == 'text/html':
+                readable = readabilipy.simple_json_from_html_string(text, use_readability=True)
+                text = markdownify.markdownify(readable['content'] or "", heading_style=markdownify.ATX)
+            
+            if len(text) > web_fetch_max_text_length:
+                raise ResponseTooLong(max=web_fetch_max_text_length)
+
+            return text
+
+    except Exception as e:
+        raise RequestFailed(error=str(e))
 
 
 @tooldef
