@@ -34,11 +34,6 @@ Act with a custom model:
 ai act --model "openai/gpt-oss-20b" "you are my favorite model"
 ```
 
-Act with speculative decoding:
-```bash
-ai act --model "large-model" --draft "small-model" "be nice to your smaller model"
-```
-
 Respond without using tools:
 ```bash
 ai ask "what is the meaning of life?"
