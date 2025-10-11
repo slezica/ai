@@ -83,6 +83,7 @@ def act(model: lms.LLM, prompt, config):
             fs_search,
             fs_replace,
             fs_mkdir,
+            fs_rm,
             fs_pwd,
             shell,
         ],
@@ -382,6 +383,43 @@ def fs_search(path: str, pattern: str) -> str:
         return ""  # No matches found
     else:
         return f"Error: {result.stderr}"
+
+
+@tooldef
+def fs_rm(path: str) -> str:
+    """
+    Remove a file or directory at the given path.
+
+    Arguments:
+        path: the path to the file or directory to remove
+
+    For directories, recursively deletes all contents after user confirmation.
+    Returns a success message.
+    """
+
+    p = Path(path)
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if not p.exists(): raise PathDoesNotExist(path=path)
+
+    if p.is_dir():
+        # Require confirmation for directory deletion
+        print(f"\nDelete directory '{path}' and all its contents?", file=sys.stderr)
+        print("  [Y] Yes | [N] No", file=sys.stderr)
+
+        response = input("> ").strip().upper()
+
+        if response != 'Y':
+            raise CommandDenied(command=f"rm {path}")
+
+        # Recursively delete directory
+        import shutil
+        shutil.rmtree(p)
+        return f"Successfully deleted directory {path} and all its contents"
+
+    else:
+        # Delete file without confirmation
+        p.unlink()
+        return f"Successfully deleted file {path}"
 
 
 @tooldef
