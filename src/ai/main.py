@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
-
-# /// script
-# requires-python = ">=3.10"
-# dependencies = [
-#     "kagiapi>=0.2.1",
-#     "lmstudio>=1.5.0",
-# ]
-# ///
 """
 Command-line AI actor with essential tooling, backed by a local LMStudio.
 """
-
-__version__ = '0.1.0'
-__author__ = "Santiago Lezica"
 
 import os
 import sys
