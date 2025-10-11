@@ -5,7 +5,7 @@ Command-line AI actor with essential tooling, backed by a local LMStudio.
 
 ## Installation
 
-Clone this repository and either run with `uv`, or place a wrapper that calls `uv` in your `$PATH`:
+Clone this repository and either run with `uv`, or place a wrapper that calls `uv` in your `PATH`:
 
 ```bash
 git clone git@github.com:slezica/ai-cli.git ai-cli
@@ -29,7 +29,7 @@ On first run, `uv` will automatically install dependencies on a managed virtuale
 
 ## Usage
 
-Assuming a wrapper called `ai` in your `$PATH`:
+Assuming a wrapper called `ai` in your `PATH`:
 
 Act using tools:
 ```bash
