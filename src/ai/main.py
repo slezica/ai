@@ -20,27 +20,6 @@ import kagiapi as kagi
 WD = os.getcwd()
 
 
-def sandbox_exec():
-    """Re-execute this process with sandbox-exec wrapper."""
-    script_dir = Path(__file__).parent.parent.parent
-    sandbox_script = script_dir / "sandbox-run.sh"
-
-    if not sandbox_script.exists():
-        print(f"Error: sandbox script not found at {sandbox_script}", file=sys.stderr)
-        sys.exit(1)
-
-    # Pass through all args but add --no-sandbox at the start to prevent re-exec loop
-    # Need to insert it after subcommand (act/ask) if present
-    args = sys.argv[1:]
-
-    # Find where to insert --no-sandbox (after first positional arg which is the subcommand)
-    if args and args[0] in ('act', 'ask'):
-        args.insert(1, '--no-sandbox')
-    else:
-        args.insert(0, '--no-sandbox')
-
-    # Replace current process with sandboxed version
-    os.execv(str(sandbox_script), [str(sandbox_script)] + args)
 
 
 def main():
@@ -59,7 +38,6 @@ def main():
 
     args = parser.parse_args()
 
-    # Re-exec with sandbox unless explicitly disabled
     if not args.no_sandbox:
         sandbox_exec() # never returns
 
@@ -600,6 +578,99 @@ def format_results(query: str, response) -> str:
     ]
 
     return "\n\n".join(results_formatted)
+
+
+# --------------------------------------------------------------------------------------------------
+# Sandbox
+
+SANDBOX_PROFILE = '''
+(version 1)
+
+;; deny everything by default
+(deny default)
+
+;; allow reading files from anywhere on host
+(allow file-read*)
+
+;; allow exec/fork (children inherit policy)
+(allow process-exec)
+(allow process-fork)
+
+;; allow signals to self
+(allow signal (target self))
+
+;; allow read access to system information
+(allow sysctl-read
+  (sysctl-name "hw.activecpu") (sysctl-name "hw.busfrequency_compat")
+  (sysctl-name "hw.byteorder") (sysctl-name "hw.cacheconfig")
+  (sysctl-name "hw.cachelinesize_compat") (sysctl-name "hw.cpufamily")
+  (sysctl-name "hw.cpufrequency_compat") (sysctl-name "hw.cputype")
+  (sysctl-name "hw.l1dcachesize_compat") (sysctl-name "hw.l1icachesize_compat")
+  (sysctl-name "hw.l2cachesize_compat") (sysctl-name "hw.l3cachesize_compat")
+  (sysctl-name "hw.logicalcpu_max") (sysctl-name "hw.machine")
+  (sysctl-name "hw.ncpu") (sysctl-name "hw.nperflevels")
+  (sysctl-name "hw.optional.arm.FEAT_BF16") (sysctl-name "hw.optional.arm.FEAT_DotProd")
+  (sysctl-name "hw.optional.arm.FEAT_FCMA") (sysctl-name "hw.optional.arm.FEAT_FHM")
+  (sysctl-name "hw.optional.arm.FEAT_FP16") (sysctl-name "hw.optional.arm.FEAT_I8MM")
+  (sysctl-name "hw.optional.arm.FEAT_JSCVT") (sysctl-name "hw.optional.arm.FEAT_LSE")
+  (sysctl-name "hw.optional.arm.FEAT_RDM") (sysctl-name "hw.optional.arm.FEAT_SHA512")
+  (sysctl-name "hw.optional.armv8_2_sha512") (sysctl-name "hw.packages")
+  (sysctl-name "hw.pagesize_compat") (sysctl-name "hw.physicalcpu_max")
+  (sysctl-name "hw.tbfrequency_compat") (sysctl-name "hw.vectorunit")
+  (sysctl-name "kern.hostname") (sysctl-name "kern.maxfilesperproc")
+  (sysctl-name "kern.osproductversion") (sysctl-name "kern.osrelease")
+  (sysctl-name "kern.ostype") (sysctl-name "kern.osvariant_status")
+  (sysctl-name "kern.osversion") (sysctl-name "kern.secure_kernel")
+  (sysctl-name "kern.usrstack64") (sysctl-name "kern.version")
+  (sysctl-name "sysctl.proc_cputype") (sysctl-name-prefix "hw.perflevel"))
+
+;; allow writes to specific paths
+(allow file-write*
+  (subpath (param "CWD"))
+  (subpath (string-append (param "HOME") "/.cache"))
+  (subpath (string-append (param "HOME") "/.gitconfig"))
+  (literal "/dev/stdout") (literal "/dev/stderr") (literal "/dev/null"))
+
+;; allow communication with system services
+(allow mach-lookup
+  (global-name "com.apple.sysmond")
+  (global-name "com.apple.SystemConfiguration.configd"))
+
+;; allow system configuration access
+(allow system-info)
+
+;; enable terminal access
+(allow file-ioctl (regex #"^/dev/tty.*"))
+
+;; allow outbound network traffic
+(allow network-outbound)
+'''
+
+def sandbox_exec():
+    """Re-execute this process with sandbox-exec."""
+    # Pass through all args but add --no-sandbox to prevent re-exec loop
+    args = sys.argv[1:]
+
+    if args and args[0] in ('act', 'ask'):
+        args.insert(1, '--no-sandbox')
+    else:
+        args.insert(0, '--no-sandbox')
+
+    # Get CWD and HOME for sandbox profile
+    cwd = os.getcwd()
+    home = os.path.expanduser('~')
+
+    # Build sandbox-exec command
+    cmd = [
+        'sandbox-exec',
+        '-D', f'CWD={cwd}',
+        '-D', f'HOME={home}',
+        '-p', SANDBOX_PROFILE,
+        sys.executable, '-m', 'ai.main'
+    ] + args
+
+    # Replace current process
+    os.execvp('sandbox-exec', cmd)
 
 
 # --------------------------------------------------------------------------------------------------
