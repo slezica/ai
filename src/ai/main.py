@@ -44,13 +44,6 @@ def sandbox_exec():
 
 
 def main():
-    # Check if --no-sandbox is present, otherwise default to sandboxed
-    has_no_sandbox = '--no-sandbox' in sys.argv
-
-    if not has_no_sandbox:
-        # Default behavior: run in sandbox
-        sandbox_exec() # never returns
-
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
     subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
 
@@ -65,6 +58,10 @@ def main():
     ask_parser.add_argument('--no-sandbox', action='store_true', help="Disable sandbox (runs sandboxed by default)")
 
     args = parser.parse_args()
+
+    # Re-exec with sandbox unless explicitly disabled
+    if not args.no_sandbox:
+        sandbox_exec() # never returns
 
     arg_prompt = args.prompt or ""
     stdin_prompt = sys.stdin.read().strip() if not sys.stdin.isatty() else ''
