@@ -3,7 +3,6 @@
 Command-line AI actor with essential tooling, backed by a local LMStudio.
 """
 
-from io import UnsupportedOperation
 import os
 import sys
 import traceback
