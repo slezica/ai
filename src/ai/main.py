@@ -20,7 +20,28 @@ import kagiapi as kagi
 WD = os.getcwd()
 
 
+def sandbox_exec():
+    """Re-execute this process with sandbox-exec wrapper."""
+    script_dir = Path(__file__).parent.parent.parent
+    sandbox_script = script_dir / "sandbox-run.sh"
+
+    if not sandbox_script.exists():
+        print(f"Error: sandbox script not found at {sandbox_script}", file=sys.stderr)
+        sys.exit(1)
+
+    # Remove --sandbox from arguments
+    args = [arg for arg in sys.argv[1:] if arg != '--sandbox']
+
+    # Replace current process with sandboxed version
+    os.execv(str(sandbox_script), [str(sandbox_script)] + args)
+
+
 def main():
+    # Check for --sandbox flag before argparse (which would fail on it)
+    if '--sandbox' in sys.argv:
+        sandbox_exec()
+        # Never returns
+
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
     subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
 
