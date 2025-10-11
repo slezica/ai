@@ -20,8 +20,6 @@ import kagiapi as kagi
 WD = os.getcwd()
 
 
-
-
 def main():
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
     subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
