@@ -44,9 +44,7 @@ def main():
 
     model = lms.llm(args.model)
 
-    config = {
-        'draftModel': args.draft or None
-    }
+    config = {} # hmm
 
     if args.command == 'ask':
         respond(model, prompt, config)
