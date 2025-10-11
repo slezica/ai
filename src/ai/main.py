@@ -82,6 +82,7 @@ def act(model: lms.LLM, prompt, config):
             fs_list,
             fs_search,
             fs_replace,
+            fs_mkdir,
             fs_pwd,
             shell,
         ],
@@ -141,6 +142,9 @@ class CommandForbidden(ToolError):
 
 class FailedReplace(Exception):
     pass
+
+class PathAlreadyExists(ToolError):
+    message = "path '{path}' already exists"
 
 # --------------------------------------------------------------------------------------------------
 # Shell
@@ -378,6 +382,27 @@ def fs_search(path: str, pattern: str) -> str:
         return ""  # No matches found
     else:
         return f"Error: {result.stderr}"
+
+
+@tooldef
+def fs_mkdir(path: str) -> str:
+    """
+    Create a directory at the given path.
+
+    Arguments:
+        path: the path to the directory to create
+
+    Creates parent directories as needed (like mkdir -p).
+    Returns a success message.
+    """
+
+    p = Path(path)
+    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    if p.exists(): raise PathAlreadyExists(path=path)
+
+    p.mkdir(parents=True, exist_ok=False)
+
+    return f"Successfully created directory at {path}"
 
 
 @tooldef
