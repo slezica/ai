@@ -29,18 +29,27 @@ def sandbox_exec():
         print(f"Error: sandbox script not found at {sandbox_script}", file=sys.stderr)
         sys.exit(1)
 
-    # Remove --sandbox from arguments
-    args = [arg for arg in sys.argv[1:] if arg != '--sandbox']
+    # Pass through all args but add --no-sandbox at the start to prevent re-exec loop
+    # Need to insert it after subcommand (act/ask) if present
+    args = sys.argv[1:]
+
+    # Find where to insert --no-sandbox (after first positional arg which is the subcommand)
+    if args and args[0] in ('act', 'ask'):
+        args.insert(1, '--no-sandbox')
+    else:
+        args.insert(0, '--no-sandbox')
 
     # Replace current process with sandboxed version
     os.execv(str(sandbox_script), [str(sandbox_script)] + args)
 
 
 def main():
-    # Check for --sandbox flag before argparse (which would fail on it)
-    if '--sandbox' in sys.argv:
-        sandbox_exec()
-        # Never returns
+    # Check if --no-sandbox is present, otherwise default to sandboxed
+    has_no_sandbox = '--no-sandbox' in sys.argv
+
+    if not has_no_sandbox:
+        # Default behavior: run in sandbox
+        sandbox_exec() # never returns
 
     parser = argparse.ArgumentParser(description="Chat with LM Studio models")
     subparsers = parser.add_subparsers(dest='command', required=True, help="Command to run")
@@ -48,10 +57,12 @@ def main():
     act_parser = subparsers.add_parser('act', help="Act using tools")
     act_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     act_parser.add_argument('--model', default='qwen/qwen3-30b-a3b-2507', help="Custom model to use")
+    act_parser.add_argument('--no-sandbox', action='store_true', help="Disable sandbox (runs sandboxed by default)")
 
     ask_parser = subparsers.add_parser('ask', help="Respond without using tools")
     ask_parser.add_argument('prompt', nargs='?', help="Prompt text", default="")
     ask_parser.add_argument('--model', default='openai/gpt-oss-20b', help="Custom model to use")
+    ask_parser.add_argument('--no-sandbox', action='store_true', help="Disable sandbox (runs sandboxed by default)")
 
     args = parser.parse_args()
 
