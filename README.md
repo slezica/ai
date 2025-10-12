@@ -28,7 +28,7 @@ uv run --script /path/to/main.py # uv will auto-manage dependencies
 Alternatively, install dependencies yourself as listed in `pyproject.toml` and just run the script.
 
 
-#### Requirements:
+### Requirements
 
 - [`uv`](https://docs.astral.sh/uv/) to manage dependencies
 - [LMStudio](https://lmstudio.ai/) running locally to provide inference
