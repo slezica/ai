@@ -1,6 +1,6 @@
 # `ai`
 
-Command-line AI actor with essential tooling, sandboxed, backed by a local LMStudio.
+Command-line AI actor with essential tooling, sandboxed, backed by a local LMStudio. Mostly an experiment.
 
 
 ## Installation
@@ -96,4 +96,23 @@ All file system operations are restricted to the current working directory.
 
 ### Shell
 - **shell**: execute shell commands (with interactive permission system)
+
+
+# FAQ
+
+Common questions from millions of users.
+
+**Is this better than Claude Code?**
+
+No, not at all. Not even close. It is private, if you want to see the bright side.
+
+**What is it for then?**
+
+I mostly use it to run commands I don't remember the flags for. Any reasonably-sized model
+can do that quickly using basic tooling.
+
+**Is it safe to use?**
+
+It's sandboxed because it wasn't. Just be careful with your current working directory.
+
 
