@@ -251,8 +251,7 @@ def fs_stat(path: str) -> str:
     Returns attributes including size, created time, modified time, accessed time, type ('f', 'd' or 'l') and permissions.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if not p.exists(): raise PathDoesNotExist(path=path)
 
     stats = p.stat()
@@ -290,8 +289,7 @@ def fs_read(path: str, start: int = 0, end: int = -1) -> str:
     Returns the lines as read.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if not p.exists(): raise PathDoesNotExist(path=path)
     if not p.is_file(): raise PathIsNotFile(path=path)
 
@@ -321,8 +319,7 @@ def fs_write(path: str, content: str, mode: str = 'w') -> str:
     Returns a success message.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
 
     with open(p, mode) as f:
         f.write(content)
@@ -341,8 +338,7 @@ def fs_list(path: str = ".") -> str:
     Returns a table with columns: size, type ('f', 'd' or 'l'), and name.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if not p.exists(): raise PathDoesNotExist(path=path)
     if not p.is_dir(): raise PathIsNotDirectory(path=path)
 
@@ -387,8 +383,7 @@ def fs_search(path: str, pattern: str) -> str:
     Returns matching lines in <file>:<line>:<content> format.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if not p.exists(): raise PathDoesNotExist(path=path)
 
     result = subprocess.run(
@@ -417,8 +412,7 @@ def fs_rm(path: str) -> str:
     Returns a success message.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if not p.exists(): raise PathDoesNotExist(path=path)
 
     if p.is_dir():
@@ -454,8 +448,7 @@ def fs_mkdir(path: str) -> str:
     Returns a success message.
     """
 
-    p = Path(path)
-    if not is_inside(p, WD): raise PathOutsideWorkDir(path=path, wd=WD)
+    p = resolve(path)
     if p.exists(): raise PathAlreadyExists(path=path)
 
     p.mkdir(parents=True, exist_ok=False)
@@ -508,15 +501,19 @@ def fs_replace(path: str, old_string: str, new_string: str, replace_all: bool = 
         raise FailedReplace(f"Error writing file: {str(e)}")
 
 
-def is_inside(path, root):
-    try:
-        Path(path).absolute().relative_to(Path(root).absolute())
-        Path(path).resolve().relative_to(Path(root).resolve())
-  
-        return True
-  
-    except (ValueError, RuntimeError, OSError):
-        return False
+def resolve(path_str):
+    path = Path(path_str)
+    root = Path(WD).resolve()
+
+    if path.is_absolute():
+        path = path.resolve()
+    else:
+        path = (root / path).resolve()
+
+    if not path.is_relative_to(root):
+        raise PathOutsideWorkDir(path=path_str, wd=WD)
+
+    return path
 
 # --------------------------------------------------------------------------------------------------
 # Kagi Search (adapted from kagimcp)
