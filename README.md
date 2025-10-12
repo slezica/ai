@@ -7,7 +7,7 @@ Command-line AI actor with essential tooling, sandboxed, backed by a local LMStu
 
 You can have `uv` manage your installation, or get `src/ai/main.py` and do it yourself.
 
-##### Managed
+### Managed
 
 Clone this repository and install it with `uv tool`.
 
@@ -17,7 +17,7 @@ cd ai
 uv tool install .
 ```
 
-##### Manual
+### Manual
 
 Download `src/ai/main.py`, then add this alias or wrapper and call it `ai`:
 
