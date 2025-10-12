@@ -74,3 +74,10 @@ def test_fs_read_outside_wd(tmp_path):
 
     assert result.startswith("Error:")
     assert "outside working directory" in result
+
+def test_fs_read_relative(tmp_wd, sample_file):
+    """fs_read takes paths relative to the working directory."""
+    result1 = main.fs_read(sample_file)
+    result2 = main.fs_read(Path(sample_file).name)
+
+    assert result1 == result2
