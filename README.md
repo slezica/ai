@@ -5,18 +5,26 @@ Command-line AI actor with essential tooling, sandboxed, backed by a local LMStu
 
 ## Installation
 
-Clone this repository and install with `uv tool`:
+You can have `uv` manage your installation, or get `src/ai/main.py` and do it yourself.
+
+**Managed**
+
+Clone this repository and install it with `uv tool`.
 
 ```bash
-git clone git@github.com:slezica/ai-cli.git
-cd ai-cli
+git clone git@github.com:slezica/ai.git
+cd ai
 uv tool install .
 ```
 
-Uninstall with `uv tool uninstall ai`, upgrade with `uv tool install --upgrade .`.
+**Manual**
+Download `src/ai/main.py`, then add this alias or wrapper and call it `ai`:
 
-Alternatively, you can just copy `src/ai/main.py` file into your `PATH` under whatever name,
-and install the dependencies separately.
+```bash
+uv run --script /path/to/main.py # uv will auto-manage dependencies
+```
+
+Alternatively, install dependencies yourself as listed in `pyproject.toml` and just run the script.
 
 
 #### Requirements:
