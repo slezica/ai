@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "kagiapi>=0.2.1",
+#   "lmstudio>=1.5.0",
+#   "markdownify>=1.2.0",
+#   "readabilipy>=0.3.0",
+#   "requests>=2.32.5",
+# ]
+# ///
+
 """
 Command-line AI actor with essential tooling, backed by a local LMStudio.
 """
