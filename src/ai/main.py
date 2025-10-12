@@ -1,11 +1,12 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env python3
 # /// script
+# requires-python = ">=3.10"
 # dependencies = [
-#   "kagiapi>=0.2.1",
-#   "lmstudio>=1.5.0",
-#   "markdownify>=1.2.0",
-#   "readabilipy>=0.3.0",
-#   "requests>=2.32.5",
+#     "kagiapi>=0.2.1",
+#     "lmstudio>=1.5.0",
+#     "markdownify>=1.2.0",
+#     "readabilipy>=0.3.0",
+#     "requests>=2.32.5",
 # ]
 # ///
 
