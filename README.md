@@ -8,12 +8,10 @@ Command-line AI actor with essential tooling, sandboxed, backed by a local LMStu
 Clone this repository and install it with `uv tool`.
 
 ```bash
-git clone git@github.com:slezica/ai.git
-cd ai
-uv tool install .
+uv tool install git+https://github.com/slezica/ai
 ```
 
-Uninstall with `uv tool uninstall ai`, upgrade with `uv tool install --upgrade .`.
+Uninstall with `uv tool uninstall ai`, upgrade with `uv tool install --upgrade ai`.
 
 
 ### Requirements
