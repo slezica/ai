@@ -5,7 +5,7 @@ Command-line AI actor with essential tooling, sandboxed, backed by a local LMStu
 
 ## Installation
 
-Clone this repository and install it with `uv tool`.
+Install it with `uv tool`.
 
 ```bash
 uv tool install git+https://github.com/slezica/ai
